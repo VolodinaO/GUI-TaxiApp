@@ -1,0 +1,233 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<script src="../bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
+
+<link rel="import" href="../bower_components/google-map/google-map.html">
+<link rel="import" href="../bower_components/google-map/google-map-directions.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/editor-icons.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-item/paper-icon-item.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/iron-label/iron-label.html">
+<link rel="import" href="../bower_components/simple-timer/simple-timer.html">
+
+
+<link rel="stylesheet" href="styles.css">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+
+<dom-module id="my-view2">
+    <template is="dom-bind">
+
+        <style include="shared-styles">
+            :host {
+                display: block;
+
+                padding: 10px;
+            }
+
+            google-map {
+                height: calc(100vh - 90px);
+            }
+
+            paper-card {
+                width: 220px;
+                height: 150px;
+                position: absolute;
+                top: 150px;
+                z-index: 1;
+            }
+
+            .serviceImg {
+                border-radius: 50%;
+            }
+
+            .showServices {
+                display: block;
+            }
+
+
+            .tripData {
+                display:none;
+            }
+
+
+
+        </style>
+        <div class="google-map-view" id="googleMapView">
+
+            <google-map id="googleMap" map="{{map}}" latitude="53.213127" longitude="50.177779"
+                        api-key="AIzaSyBf1gar9zdN8b35MuBfT37P_3wuCpqi9b4"
+                        zoom="13">
+                <google-map-marker latitude="53.213127" longitude="50.177779"
+                                   title="Сасай Масай" draggable="true"></google-map-marker>
+            </google-map>
+
+            <google-map-directions id="direct" map="{{map}}"
+                                   start-address="{{start}}"
+                                   end-address="{{end}}"
+                                   api-key="AIzaSyBf1gar9zdN8b35MuBfT37P_3wuCpqi9b4"></google-map-directions>
+
+            <paper-card elevation="2">
+                <paper-icon-item>
+                <iron-icon icon="search" slot="item-icon" item-icon></iron-icon>
+                <paper-input label="Start address"
+                                                    value="{{start}}"></paper-input>
+                </paper-icon-item>
+                <paper-icon-item>
+                    <iron-icon icon="search" slot="item-icon" item-icon></iron-icon>
+                    <paper-input label="End address"
+                                 value="{{end}}"></paper-input>
+                </paper-icon-item>
+
+                <div align="center"><paper-button raised="true" on-tap="chooseService">OK</paper-button> </div>
+
+            </paper-card>
+        </div>
+
+        <div id="services">
+            <hr>
+            <div id="showServicesBasic" class="showServices" on-tap="handleTapBasic">
+                <iron-image id="igor" class="serviceImg"
+                            src="https://media.glassdoor.com/sql/193550/basic-research-squarelogo-1424177039412.png"></iron-image>
+                <div align="right"><iron-label id="basicWillCostLabel">Trip will cost:</iron-label>
+                    <iron-label id="basicCostLabel">5</iron-label>
+                    <iron-icon icon="editor:attach-money" item-icon></iron-icon></div>
+            </div>
+            <hr>
+            <div class="showServices" id="showServicesStandard" on-tap="handleTapStandard">
+                <iron-image class="serviceImg"
+                            src="https://yt3.ggpht.com/-ryE1Y2sjQf8/AAAAAAAAAAI/AAAAAAAAAAA/d4SB5ZQUTpM/s100-c-k-no-mo-rj-c0xffffff/photo.jpg"></iron-image>
+                <div align="right"><iron-label id="standardWillCostLabel">Trip will cost:</iron-label>
+                    <iron-label id="standardCostLabel">15</iron-label>
+                    <iron-icon icon="editor:attach-money" item-icon></iron-icon></div>
+            </div>
+            <hr>
+            <div class="showServices" id="showServicesVip" on-tap="handleTapVip">
+                <iron-image class="serviceImg"
+                            src="https://www.kasino2crazyvegas.com/portals/0/SiteContent/SliderImages/2015/vip.png"></iron-image>
+
+                <div align="right"> <iron-label id="vipWillCostLabel">Trip will cost:</iron-label>
+                    <iron-label id="vipCostLabel">25</iron-label>
+                <iron-icon icon="editor:attach-money" item-icon></iron-icon> </div>
+            </div>
+            <hr>
+        </div>
+
+        <div id="tripDatas" class="tripData" align="center">
+            <iron-label>Trip will cost </iron-label>
+            <iron-label id="finalCostLabel">Trip will cost </iron-label>
+            <iron-label> $ Taxi will arrive in:</iron-label>
+            <simple-timer on-current-time-changed="cancelTimer" id="timer" start-time="10"></simple-timer>
+            <paper-button on-tap="cancelBook">Cancel</paper-button>
+        </div>
+
+        <div id="tillTrip" class="tripData" align="center">
+            <iron-label>Trip time left:</iron-label>
+            <simple-timer on-current-time-changed="tillTripTimer" id="timer2" start-time="10"></simple-timer>
+        </div>
+    </template>
+
+    <script>
+
+        Polymer({
+            is: 'my-view2',
+            properties: {
+                count: {
+                    type: Number,
+                    value: 1
+                },
+                basicCost: {
+                    type: Number,
+                    value: 5
+                },
+                standardCost: {
+                    type: Number,
+                    value: 15
+                },
+                vipCost: {
+                    type: Number,
+                    value: 25
+                }
+            },
+            handleTapBasic: function () {
+                var oldChild = this.$.services;
+                var parentNode = Polymer.dom(oldChild).parentNode;
+                parentNode.insertBefore(this.$.tripDatas, oldChild);
+                this.$.tripDatas.style.display = "block";
+                this.$.finalCostLabel.innerText = this.basicCost;
+                parentNode.removeChild(oldChild);
+                this.$.timer.start();
+            },
+            handleTapStandard: function () {
+                var oldChild = this.$.services;
+                var parentNode = Polymer.dom(oldChild).parentNode;
+                parentNode.insertBefore(this.$.tripDatas, oldChild);
+                this.$.tripDatas.style.display = "block";
+                this.$.finalCostLabel.innerText = this.standardCost;
+                parentNode.removeChild(oldChild);
+                this.$.timer.start();
+            },
+            handleTapVip: function () {
+                var oldChild = this.$.services;
+                var parentNode = Polymer.dom(oldChild).parentNode;
+                parentNode.insertBefore(this.$.tripDatas, oldChild);
+                this.$.tripDatas.style.display = "block";
+                this.$.finalCostLabel.innerText = this.vipCost;
+                parentNode.removeChild(oldChild);
+                this.$.timer.start();
+            },
+            cancelBook: function () {
+                var newChilde = this.$.services;
+                var parentNode = Polymer.dom(this.$.tripDatas).parentNode;
+                this.$.timer.pause();
+                this.$.timer.currentTime=10;
+                parentNode.insertBefore(newChilde, this.$.tripDatas);
+                parentNode.removeChild(this.$.tripDatas)
+            },
+            cancelTimer: function () {
+                var currentTime = this.$.timer.currentTime;
+                if (currentTime === 0.0) {
+                    var newChilde = this.$.tillTrip;
+                    var parentNode = Polymer.dom(this.$.tripDatas).parentNode;
+                    this.$.timer.pause();
+                    this.$.timer.currentTime=10;
+                    parentNode.insertBefore(newChilde, this.$.tripDatas);
+                    parentNode.removeChild(this.$.tripDatas)
+                    this.$.tillTrip.style.display = "block";
+                    this.$.timer2.start();
+                }
+            },
+            tillTripTimer: function () {
+                var currentTime = this.$.timer2.currentTime;
+                if (currentTime === 0.0) {
+                    window.location.href = "/view3";
+                }
+            },
+            chooseService: function () {
+                var direction = this.$.direct;
+                var start = direction.startAddress;
+                var end = direction.endAddress;
+                this.$.googleMapView.style.height = "calc(50vh - 90px)";
+                this.$.googleMap.style.height = "calc(50vh - 90px)";
+                if (Boolean(start) && Boolean(end)) {
+                    this.count = this.count + 1;
+                    this.basicCost = this.count * 2 + 5;
+                    this.standardCost = this.count * 4 + 5;
+                    this.vipCost = this.count * 6 + 5;
+                    this.$.basicCostLabel.innerText = this.basicCost;
+                    this.$.standardCostLabel.innerText = this.standardCost;
+                    this.$.vipCostLabel.innerText = this.vipCost;
+                }
+            }
+        });
+    </script>
+
+</dom-module>
